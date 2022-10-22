@@ -29,5 +29,7 @@ step 4:
 Run HR_Automation.py script.  
 
 [Note] : Once you run the script the emails you entered will be clearead from file "list_of_emails.csv"  
-[Note] : You can check the activity report in the file "email_sent_list.csv"  
+[Note] : You can check the activity report in the file "email_sent_list.csv"   
 
+Screenshot
+! [Output ScreenShot] (https://raw.githubusercontent.com/gshubham533/HR-Automation/main/screenshot/Email%20Automation%20Screenshot.png)
