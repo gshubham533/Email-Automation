@@ -82,7 +82,7 @@ def get_all_emails():
         header = next(csv_reader)
         for row in csv_reader:
             rows.append(row)
-        is_done = truncate_and_add_header()
+        
     return header,rows
 
 def truncate_and_add_header():
@@ -141,5 +141,6 @@ if __name__ == "__main__":
             save_logs = mail_sent_update_csv(name,to_email,str(mail_sent_status),email_sender,subject,body.replace("\n","\\n"),date_time)
             count = count + 1
         print("------------------------    Successfully sent to "+str(count)+" emails     --------------------------------")
+        is_done = truncate_and_add_header()
     except IndexError:
         print("\n\nxxxxxxxxxxxxxxxxxxx         Email list is Empty                xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
