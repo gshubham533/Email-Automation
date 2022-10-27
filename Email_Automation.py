@@ -54,7 +54,7 @@ def truncate_and_add_header():
     with open('list_of_emails.csv', 'w') as email_list_file:
         email_list_file.truncate()
 
-    write_this_header = ["Name","Email"]
+    write_this_header = ["Email"]
     with open('list_of_emails.csv', 'a') as email_list_file:
         writer_obj = csv.writer(email_list_file)
         writer_obj.writerow(write_this_header)
