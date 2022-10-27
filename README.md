@@ -1,4 +1,4 @@
-# HR-Automation
+# Email Automation (Broadcast Emails for free)
 This Python script will help you in automation like sending bulk emails in a go. To get started follow the steps mentioned below.  
 
 
@@ -23,7 +23,9 @@ Step 2:
 Go inside "Setup Email Format" folder and save the subject of the email in "subject.txt" file and save body of the email in "body.txt" file.  
 
 Step 3:  
-Open "list_of_emails.csv" file and enter the email addresses to send in email column.  
+Open "list_of_emails.csv" file and enter the email addresses to send in email column.
+[Feature] : To send email with variables. Add the variable column name after the email column in file (list_of_emails.csv)  
+and then use the same variable column name in the body.txt file (Setup Email Format/body.txt) enclosed in a curly bracket (For Example: Dear {name},)
 
 step 4:  
 Run HR_Automation.py script.  
