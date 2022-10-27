@@ -1,6 +1,6 @@
 import csv,datetime   
 from email.message import EmailMessage
-import json , ssl, smtplib
+import json , ssl, smtplib, re
 
 def get_sender_email():
     file = open('credentials/email_password.json')
@@ -39,41 +39,6 @@ def send_email(email_subject,email_body,to_email):
     mail_sent_status = smtp.sendmail(email_sender,to_email,gm.as_string())
     return mail_sent_status
 
-
-def send_mail(data,email_subject,email_body):
-    file = open('credentials/email_password.json')
-    creds =  json.load(file)
-    email_sender        = creds["email"]
-    password            = creds["password"]
-    file.close()
-
-    gm = EmailMessage()
-    gm["From"]      = email_sender
-    gm["Subject"]   = email_subject
-    gm.set_content(email_body)
-
-    context = ssl.create_default_context()
-
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465 , context=context) as smtp:
-        login           = smtp.login(email_sender,password)
-        count = 0
-        print("------------------------    Process Started     --------------------------------")
-        try:
-            for i in data:
-                name = i[0]
-                to_email = i[1]
-                # gm["To"]  = to_email
-
-                mail_sent_status = smtp.sendmail(email_sender,to_email,gm.as_string())
-                print(str(count + 1) + ". Sent to " + to_email)
-                date_time = datetime.datetime.now()
-                save_logs = mail_sent_update_csv(name,to_email,str(mail_sent_status),email_sender,subject,body.replace("\n","\\n"),date_time)
-                count = count + 1
-            print("------------------------    Successfully sent to "+str(count)+" emails     --------------------------------")
-        except IndexError:
-            print("\n\nxxxxxxxxxxxxxxxxxxx         Email list is Empty                xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-    return email_sender,smtp
-
 def get_all_emails():
     rows = []
     header = []
@@ -97,12 +62,12 @@ def truncate_and_add_header():
  
     return True
 
-def mail_sent_update_csv(name="",to_email="",mail_sent=False,from_email="",subject="",body="",date_time=""):
+def mail_sent_update_csv(to_email="",mail_sent=False,from_email="",subject="",body="",date_time=""):
     if mail_sent == True:
         email_sent = "Yes"
     else:
         email_sent = "No"
-    write_this_value = [name,to_email,email_sent,from_email,to_email,subject,str(body),str(date_time)]
+    write_this_value = [to_email,email_sent,from_email,to_email,subject,str(body),str(date_time)]
     with open('email_sent_list.csv', 'a', newline='\n') as email_sent_list:
         writer_obj = csv.writer(email_sent_list)
         writer_obj.writerow(write_this_value)
@@ -124,21 +89,46 @@ def get_subject_and_body():
 
     return subject,body
 
+def get_all_vars(body):
+    vars = re.findall('\{.*?\}', body)
+    return vars
+
+def replace_vars_in_body(body,var_column_name,variable_values):
+    for column,index in var_column_name.items():
+        body = body.replace(column,variable_values[index])
+    return body
+
 if __name__ == "__main__":
     email_sender = get_sender_email()
-    subject,body = get_subject_and_body()
+    subject,im_body = get_subject_and_body()
     header,data = get_all_emails()
     count = 0
+    # print(header)
     print("------------------------    Process Started     --------------------------------")
+    email_var_with_index = dict()
+    vars = get_all_vars(im_body)
+    
+    # print(vars)
+    for index,k in enumerate(vars):
+        # k = k.replace('{','').replace('}','')
+        email_var_with_index[k] = index
+
+    # print(email_var_with_index)
     try:
         for i in data:
-            name = i[0]
-            to_email = i[1]
-            # gm["To"]  = to_email
-            mail_sent_status = send_email(subject,body,to_email)
+            to_email = i[0]
+            variable = []
+            for var_name,index in email_var_with_index.items():
+                variable.append(i[index+1])
+            body = replace_vars_in_body(im_body,email_var_with_index,variable)
+            try:
+                mail_sent_status = send_email(subject,body,to_email) # returns {} (empty dictionary)
+                mail_sent_status = True
+            except Exception as e:
+                mail_sent_status = False
             print(str(count + 1) + ". Sent to " + to_email)
             date_time = datetime.datetime.now()
-            save_logs = mail_sent_update_csv(name,to_email,str(mail_sent_status),email_sender,subject,body.replace("\n","\\n"),date_time)
+            save_logs = mail_sent_update_csv(to_email,mail_sent_status,email_sender,subject,body.replace("\n","\\n"),date_time)
             count = count + 1
         print("------------------------    Successfully sent to "+str(count)+" emails     --------------------------------")
         is_done = truncate_and_add_header()

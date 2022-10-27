@@ -1,2 +1,5 @@
 /junk files
 /env
+*.pyc
+test.py
+email_password.json
