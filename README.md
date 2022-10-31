@@ -28,7 +28,7 @@ Open "list_of_emails.csv" file and enter the email addresses to send in email co
 and then use the same variable column name in the body.txt file (Setup Email Format/body.txt) enclosed in a curly bracket (For Example: Dear {name},)
 
 step 4:  
-Run HR_Automation.py script.  
+Run Email_Automation file script.  
 
 [Note] : Once you run the script the emails you entered will be clearead from file "list_of_emails.csv"  
 [Note] : You can check the activity report in the file "email_sent_list.csv"   
