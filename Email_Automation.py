@@ -108,7 +108,6 @@ if __name__ == "__main__":
         header,data = get_all_emails()
         count = 0
         # print(header)
-        print("------------------------    Process Started     --------------------------------")
         email_var_with_index = dict()
         vars = get_all_vars(im_body)
         
@@ -118,6 +117,8 @@ if __name__ == "__main__":
             email_var_with_index[k] = index
 
         try:
+            print("------------------------    Process Started     --------------------------------")
+
             for i in data:
                 to_email = i[0]
                 variable = []
@@ -135,11 +136,11 @@ if __name__ == "__main__":
                 count = count + 1
             print("------------------------    Successfully sent to "+str(count)+" emails     --------------------------------")
             is_done = truncate_and_add_header(email_var_with_index)
-            print(input("/-/-/-/-/-/-/-/  Press enter to exit.    /-/-/-/-/-/-/-/-/-/"))
+            print(input("\n\n/-/-/-/-/-/-/-/  Press enter to exit.    /-/-/-/-/-/-/-/-/-/"))
         except IndexError:
             print("\n\nxxxxxxxxxxxxxxxxxxx         Email list is Empty Or Provide Variables               xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-            print(input("/-/-/-/-/-/-/-/  Press enter to exit.    /-/-/-/-/-/-/-/-/-/"))
+            print(input("\n\n/-/-/-/-/-/-/-/  Press enter to exit.    /-/-/-/-/-/-/-/-/-/"))
     except Exception as e:
         print(input("/-/-/-/-/-/-/-/  Error Message : "+str(e)+" ---> Contact Shubham   /-/-/-/-/-/-/-/-/-/"))
-        print(input("/-/-/-/-/-/-/-/  Press enter to exit.    /-/-/-/-/-/-/-/-/-/"))
+        print(input("\n\n/-/-/-/-/-/-/-/  Press enter to exit.    /-/-/-/-/-/-/-/-/-/"))
         
