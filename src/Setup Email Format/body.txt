@@ -1,0 +1,6 @@
+Dear {name},
+Welcome to Test Body.
+
+Regards,
+{company name}
+xD
