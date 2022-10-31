@@ -57,7 +57,6 @@ def truncate_and_add_header(var_header):
     write_this_header = ["Email"]
     for var in var_header:
         write_this_header.append(var.replace('{','').replace('}',''))
-    print(write_this_header)
     with open('list_of_emails.csv', 'a') as email_list_file:
         writer_obj = csv.writer(email_list_file)
         writer_obj.writerow(write_this_header)
