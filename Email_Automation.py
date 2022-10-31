@@ -29,13 +29,13 @@ def login():
     return smtp
 
 def send_email(email_subject,email_body,to_email):
-    email_sender = get_sender_email()
-    smtp = login()
     gm = EmailMessage()
-    gm["From"]      = email_sender
+    gm["From"]      =  get_sender_email()
     gm["Subject"]   = email_subject
+    gm["To"]   = to_email
     gm.set_content(email_body)
 
+    smtp = login()
     mail_sent_status = smtp.sendmail(email_sender,to_email,gm.as_string())
     return mail_sent_status
 
@@ -50,11 +50,14 @@ def get_all_emails():
         
     return header,rows
 
-def truncate_and_add_header():
+def truncate_and_add_header(var_header):
     with open('list_of_emails.csv', 'w') as email_list_file:
         email_list_file.truncate()
 
     write_this_header = ["Email"]
+    for var in var_header:
+        write_this_header.append(var.replace('{','').replace('}',''))
+    print(write_this_header)
     with open('list_of_emails.csv', 'a') as email_list_file:
         writer_obj = csv.writer(email_list_file)
         writer_obj.writerow(write_this_header)
@@ -99,38 +102,43 @@ def replace_vars_in_body(body,var_column_name,variable_values):
     return body
 
 if __name__ == "__main__":
-    email_sender = get_sender_email()
-    subject,im_body = get_subject_and_body()
-    header,data = get_all_emails()
-    count = 0
-    # print(header)
-    print("------------------------    Process Started     --------------------------------")
-    email_var_with_index = dict()
-    vars = get_all_vars(im_body)
-    
-    # print(vars)
-    for index,k in enumerate(vars):
-        # k = k.replace('{','').replace('}','')
-        email_var_with_index[k] = index
-
-    # print(email_var_with_index)
     try:
-        for i in data:
-            to_email = i[0]
-            variable = []
-            for var_name,index in email_var_with_index.items():
-                variable.append(i[index+1])
-            body = replace_vars_in_body(im_body,email_var_with_index,variable)
-            try:
-                mail_sent_status = send_email(subject,body,to_email) # returns {} (empty dictionary)
-                mail_sent_status = True
-            except Exception as e:
-                mail_sent_status = False
-            print(str(count + 1) + ". Sent to " + to_email)
-            date_time = datetime.datetime.now()
-            save_logs = mail_sent_update_csv(to_email,mail_sent_status,email_sender,subject,body.replace("\n","\\n"),date_time)
-            count = count + 1
-        print("------------------------    Successfully sent to "+str(count)+" emails     --------------------------------")
-        is_done = truncate_and_add_header()
-    except IndexError:
-        print("\n\nxxxxxxxxxxxxxxxxxxx         Email list is Empty                xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+
+        email_sender = get_sender_email()
+        subject,im_body = get_subject_and_body()
+        header,data = get_all_emails()
+        count = 0
+        # print(header)
+        print("------------------------    Process Started     --------------------------------")
+        email_var_with_index = dict()
+        vars = get_all_vars(im_body)
+        
+        # print(vars)
+        for index,k in enumerate(vars):
+            # k = k.replace('{','').replace('}','')
+            email_var_with_index[k] = index
+
+        try:
+            for i in data:
+                to_email = i[0]
+                variable = []
+                for var_name,index in email_var_with_index.items():
+                    variable.append(i[index+1])
+                body = replace_vars_in_body(im_body,email_var_with_index,variable)
+                try:
+                    mail_sent_status = send_email(subject,body,to_email) # returns {} (empty dictionary)
+                    mail_sent_status = True
+                except Exception as e:
+                    mail_sent_status = False
+                print(str(count + 1) + ". Sent to " + to_email)
+                date_time = datetime.datetime.now()
+                save_logs = mail_sent_update_csv(to_email,mail_sent_status,email_sender,subject,body.replace("\n","\\n"),date_time)
+                count = count + 1
+            print("------------------------    Successfully sent to "+str(count)+" emails     --------------------------------")
+            is_done = truncate_and_add_header(email_var_with_index)
+            print(input("/-/-/-/-/-/-/-/  Press enter to exit.    /-/-/-/-/-/-/-/-/-/"))
+        except IndexError:
+            print("\n\nxxxxxxxxxxxxxxxxxxx         Email list is Empty Or Provide Variables               xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+    except Exception as e:
+        print(input("/-/-/-/-/-/-/-/  Error Message : "+str(e)+" ---> Contact Shubham   /-/-/-/-/-/-/-/-/-/"))
+        
