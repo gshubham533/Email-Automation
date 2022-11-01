@@ -2,6 +2,10 @@ import csv,datetime
 from email.message import EmailMessage
 import json , ssl, smtplib, re
 
+
+"""
+Returns the sender/owner/from/Receipient Email address
+"""
 def get_sender_email():
     file = open('credentials/email_password.json')
     creds =  json.load(file)
@@ -9,6 +13,10 @@ def get_sender_email():
     file.close()
     return email_sender
 
+
+"""
+Authenticated the gmail account and returns smtp instance to send emails.
+"""
 def login():
     file = open('credentials/email_password.json')
     creds =  json.load(file)
@@ -22,23 +30,37 @@ def login():
         login = smtp.login(email_sender,password)
     except smtplib.SMTPAuthenticationError:
         print("xxxxxxxxxxxxxxxxxxxxx       INVALID CREDENTIALS             xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+        return False
     except Exception as e:
         print("xxxxxxxxxxxxxxxxxxxxx       SOMETHING WENT WRONG (PLEASE CONTACT SHUBHAM)             xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-        print("xxxxxxxxxxxxxxxxxxxxx       ERROR MESSAGE : "+e+"             xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+        print("xxxxxxxxxxxxxxxxxxxxx       ERROR MESSAGE : "+str(e)+"             xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+        return False
 
     return smtp
 
-def send_email(email_subject,email_body,to_email):
+"""
+Args : Email Subject , Email Body , To Send
+
+Returns empty dictionary on success ex: {}
+"""
+def send_email(smtp,email_subject,email_body,to_email):
+    email_sender = get_sender_email()
     gm = EmailMessage()
-    gm["From"]      =  get_sender_email()
+    gm["From"]      =  email_sender
     gm["Subject"]   = email_subject
     gm["To"]   = to_email
     gm.set_content(email_body)
 
-    smtp = login()
     mail_sent_status = smtp.sendmail(email_sender,to_email,gm.as_string())
     return mail_sent_status
 
+
+"""
+Returns the header and the rows from the file list_of_emails
+
+Ex : header = ["email","name"]
+     body = [["abc@hotmail.com","abc"],["test@gamil.com","test"]]
+"""
 def get_all_emails():
     rows = []
     header = []
@@ -50,6 +72,17 @@ def get_all_emails():
         
     return header,rows
 
+"""
+truncates the file list_of_emails and then adds the headers.
+
+1 Arg : List of variables present in body.txt 
+Ex. var_header = ["name", "company name"]
+
+
+default header at index 0 is Email
+Then it searches for varibale name in the body.txt and adds them as header as well
+Ex. : Email,name,company name
+"""
 def truncate_and_add_header(var_header):
     with open('list_of_emails.csv', 'w') as email_list_file:
         email_list_file.truncate()
@@ -64,6 +97,15 @@ def truncate_and_add_header(var_header):
  
     return True
 
+
+"""
+Updates the logs file named email_sent_list.csv with the status
+
+Args : To Email (Receipents email), Email Sent (Yes/No), From Email (senders email), Subject (Email Subject), Body (Email body with next line as \n Ex. Dear Shubham\n\nThanks), DateTime (Email sent date and time) 
+
+returns Boolean.
+If the logging was succes then returns True else False
+"""
 def mail_sent_update_csv(to_email="",mail_sent=False,from_email="",subject="",body="",date_time=""):
     if mail_sent == True:
         email_sent = "Yes"
@@ -77,6 +119,9 @@ def mail_sent_update_csv(to_email="",mail_sent=False,from_email="",subject="",bo
 
     return True
 
+"""
+return to variables subject and body from file "Setup Email Format/subject.txt" and "Setup Email Format/body.txt"
+"""
 def get_subject_and_body():
     subject = ""
     body = "" 
@@ -91,14 +136,45 @@ def get_subject_and_body():
 
     return subject,body
 
+"""
+Using regex return list of all variables in body.txt enclosed in braces {}
+
+Ex. Dear {name}
+    Thanks,
+    {my name}
+
+returns vars = ["{name}","{my name}"]
+"""
 def get_all_vars(body):
     vars = re.findall('\{.*?\}', body)
     return vars
 
+
+"""
+Args : Email Body (str) , Variables from body with its index no. (dict) , Varibale Value (list) 
+
+replaces the variables with the actual value in email body
+
+Ex. : Email Body = Dear {name}
+                    Regards
+                    {my name}
+      var_column_name  = {"{name}":0,"{my name}":1}
+      variable_values = ["Alex","Shubham"]
+
+returns Body 
+
+Ex. Dear Alex,
+    Regards
+    Shubham
+"""
 def replace_vars_in_body(body,var_column_name,variable_values):
     for column,index in var_column_name.items():
         body = body.replace(column,variable_values[index])
     return body
+
+def press_enter_to_exit():
+    print(input("\n\n/-/-/-/-/-/-/-/  Press enter to exit.    /-/-/-/-/-/-/-/-/-/"))
+
 
 if __name__ == "__main__":
     try:
@@ -107,14 +183,15 @@ if __name__ == "__main__":
         subject,im_body = get_subject_and_body()
         header,data = get_all_emails()
         count = 0
-        # print(header)
         email_var_with_index = dict()
         vars = get_all_vars(im_body)
-        
-        # print(vars)
         for index,k in enumerate(vars):
             # k = k.replace('{','').replace('}','')
             email_var_with_index[k] = index
+        smtp = login()
+        if smtp == False:
+            press_enter_to_exit()
+            exit()
 
         try:
             print("------------------------    Process Started     --------------------------------")
@@ -126,7 +203,7 @@ if __name__ == "__main__":
                     variable.append(i[index+1])
                 body = replace_vars_in_body(im_body,email_var_with_index,variable)
                 try:
-                    mail_sent_status = send_email(subject,body,to_email) # returns {} (empty dictionary)
+                    mail_sent_status = send_email(smtp,subject,body,to_email) # returns {} (empty dictionary)
                     mail_sent_status = True
                 except Exception as e:
                     mail_sent_status = False
@@ -136,11 +213,11 @@ if __name__ == "__main__":
                 count = count + 1
             print("------------------------    Successfully sent to "+str(count)+" emails     --------------------------------")
             is_done = truncate_and_add_header(email_var_with_index)
-            print(input("\n\n/-/-/-/-/-/-/-/  Press enter to exit.    /-/-/-/-/-/-/-/-/-/"))
+            press_enter_to_exit()
         except IndexError:
             print("\n\nxxxxxxxxxxxxxxxxxxx         Email list is Empty Or Provide Variables               xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-            print(input("\n\n/-/-/-/-/-/-/-/  Press enter to exit.    /-/-/-/-/-/-/-/-/-/"))
+            press_enter_to_exit()
     except Exception as e:
         print(input("/-/-/-/-/-/-/-/  Error Message : "+str(e)+" ---> Contact Shubham   /-/-/-/-/-/-/-/-/-/"))
-        print(input("\n\n/-/-/-/-/-/-/-/  Press enter to exit.    /-/-/-/-/-/-/-/-/-/"))
+        press_enter_to_exit()
         
