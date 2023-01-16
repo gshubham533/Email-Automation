@@ -1,5 +1,5 @@
 # Email Automation (Broadcast Emails for free)
-This Python script will help you in automation like sending bulk emails in a go. To get started follow the steps mentioned below.  
+This Python script will help you in sending bulk personalised emails from a csv sheet (You can provide varibles). To get started follow the steps mentioned below.  
 
 
 Step 1 (Getting your credentials from gmail to send automated emails) :  
